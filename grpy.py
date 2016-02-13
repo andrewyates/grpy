@@ -5,9 +5,6 @@ import os
 import pygit2
 import termcolor
 
-_mr_valid_states = set(['ok'])
-_mr_invalid_states = set(['missing', 'broken'])
-
 
 class ManagedRepo:
     def __init__(self, path, branches):
@@ -24,7 +21,6 @@ class ManagedRepo:
         self.repo = pygit2.Repository(path)
         self.path = path
         
-        # TODO what if all the requested branches don't exist locally?
         self.branches = branches
 
     def status(self):
