@@ -73,6 +73,31 @@ def load_grconfig(fn, branches=['master']):
     return repos
 
 
+def print_details(mr, maxlen):
+    modified, branches = mr.status()
+    header_name = colored("%0-*s" % (maxlen, mr.path), "white", attrs=["dark"])
+    print "%s\t%s" % (header_name, colored("%s modified" % modified, "red") if modified != 0 else colored("Clean", "green"))
+
+    for branch, (missing, ahead, behind) in branches.iteritems():
+        if missing:
+            brstate = None
+        else:
+            brstate = ["%s %s" % (k, count) for k, count in [('ahead', ahead), ('behind', behind)] if count > 0]
+
+        if brstate is None:
+            state = colored("missing", "red")
+        elif len(brstate) == 0:
+            if ahead == -1:
+                state = colored("no remote", "red")
+            else:
+                state = colored("up-to-date", "green")
+        else:
+            state = colored(", ".join(brstate), "red")
+
+        header_branch = colored("%0*s" % (maxlen / 2, "   " + branch), "white", attrs=[])
+        if state.find("up-to") == -1:
+            print "%s  %s" % (header_branch, state)
+
 if __name__ == "__main__":
     if True:
         colored = termcolor.colored
@@ -90,26 +115,5 @@ if __name__ == "__main__":
 
     maxlen = max(len(mr.path) for mr in mrs) + 2
     for mr in mrs:
-        modified, branches = mr.status()
-        header_name = colored("%0-*s" % (maxlen, mr.path), "white", attrs=["dark"])
-        print "%s\t%s" % (header_name, colored("%s modified" % modified, "red") if modified != 0 else colored("Clean", "green"))
-        
-        for branch, (missing, ahead, behind) in branches.iteritems():
-            if missing:
-                brstate = None
-            else:
-                brstate = ["%s %s" % (k, count) for k, count in [('ahead', ahead), ('behind', behind)] if count > 0]
-
-            if brstate is None:
-                state = colored("missing", "red")
-            elif len(brstate) == 0:
-                if ahead == -1:
-                    state = colored("no remote", "red")
-                else:
-                    state = colored("up-to-date", "green")
-            else:
-                state = colored(", ".join(brstate), "red")
-
-            header_branch = colored("%0*s" % (maxlen, "   " + branch), "white", attrs=["dark"])
-            print "%s  %s" % (header_branch, state)
+        print_details(mr, maxlen)
 
