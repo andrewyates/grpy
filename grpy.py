@@ -8,8 +8,8 @@ import termcolor
 
 class ManagedRepo:
     def __init__(self, path, branches):
-
         error = None
+        path = _expand(path)
         if not os.path.exists(path):
             error = "repository path does not exist: %s" % path
         elif not os.path.exists(os.path.join(path, '.git')):
@@ -19,7 +19,7 @@ class ManagedRepo:
             raise RuntimeError(error)
             
         self.repo = pygit2.Repository(path)
-        self.path = path
+        self.path = _normalize(path)
         
         self.branches = branches
 
@@ -43,10 +43,24 @@ class ManagedRepo:
             ahead, behind = None, None, None
 
         return missing, ahead, behind
-        
 
+    def split_path(self):
+        i = self.path.rfind('/', 0, len(self.path) - 1) + 1
+        basepath, dirname = self.path[:i], self.path[i:]
+        return basepath, dirname
+
+        
 def _expand(path):
     return os.path.expandvars(os.path.expanduser(path))
+
+
+def _normalize(path):
+    home = os.path.expanduser("~/")
+    path = os.path.expandvars(os.path.expanduser(path))
+    if path.startswith(home):
+        path = os.path.join("~/", path[len(home):])
+
+    return path
 
 
 def _not_colored(s, color, attrs=[]):
@@ -75,8 +89,13 @@ def load_grconfig(fn, branches=['master']):
 
 def print_details(mr, maxlen):
     modified, branches = mr.status()
-    header_name = colored("%0-*s" % (maxlen, mr.path), "white", attrs=["dark"])
-    print "%s\t%s" % (header_name, colored("%s modified" % modified, "red") if modified != 0 else colored("Clean", "green"))
+
+    pathA, pathB = mr.split_path()
+    header_name = "%0-*s" % (maxlen, pathA + pathB)
+    i = header_name.find(pathA) + len(pathA)
+    header_name = colored(header_name[:i], "white", attrs=["dark"]) + colored(header_name[i:], "white")
+
+    print "%s %s" % (header_name, colored("%s modified" % modified, "red") if modified != 0 else colored("Clean", "green"))
 
     for branch, (missing, ahead, behind) in branches.iteritems():
         if missing:
@@ -111,7 +130,7 @@ if __name__ == "__main__":
         try:
             mrs.append(ManagedRepo(repo, d['branches']))
         except:
-            print colored("missing: %s" % repo, "red")
+            print colored("missing: ", "red") + _expand(repo)
 
     maxlen = max(len(mr.path) for mr in mrs) + 2
     for mr in mrs:
