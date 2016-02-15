@@ -97,24 +97,27 @@ def print_details(mr, maxlen):
 
     print "%s %s" % (header_name, colored("%s modified" % modified, "red") if modified != 0 else colored("Clean", "green"))
 
+    skip_updated = True
     for branch, (missing, ahead, behind) in branches.iteritems():
         if missing:
             brstate = None
         else:
             brstate = ["%s %s" % (k, count) for k, count in [('ahead', ahead), ('behind', behind)] if count > 0]
 
+        updated = False
         if brstate is None:
-            state = colored("missing", "red")
+            state = colored("missing", "magenta")
         elif len(brstate) == 0:
             if ahead == -1:
-                state = colored("no remote", "red")
+                state = colored("no remote", "magenta")
             else:
-                state = colored("up-to-date", "green")
+                updated = True
+                state = colored("up-to-date", "white")
         else:
-            state = colored(", ".join(brstate), "red")
+            state = colored(", ".join(brstate), "cyan")
 
         header_branch = colored("%0*s" % (maxlen / 2, "   " + branch), "white", attrs=[])
-        if state.find("up-to") == -1:
+        if not (skip_updated and updated):
             print "%s  %s" % (header_branch, state)
 
 if __name__ == "__main__":
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     repos = load_grconfig(_expand("~/.grconfig.json"))
 
     mrs = []
-    for repo, d in repos.iteritems():
+    for repo, d in sorted(repos.iteritems()):
         try:
             mrs.append(ManagedRepo(repo, d['branches']))
         except:
