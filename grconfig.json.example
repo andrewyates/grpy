@@ -1,0 +1,11 @@
+{
+  "tags": {
+    "some_tag_here": [
+      "/home/andrew/some_git_repo"
+    ],
+    "work": [
+      "/home/andrew/another_repo",
+      "/srv/important/yet_another"
+    ],
+  }
+}
