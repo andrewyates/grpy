@@ -3,6 +3,7 @@ grpy is a work-in-progress Python port of [gr](https://github.com/mixu/gr), a to
 
 ## Installation
 ```sh
+$ sudo apt-get install libgit2-dev
 $ pip install -r requirements.txt
 $ cp grconfig.json.example ~/.grconfig.json
 $ $EDITOR ~/.grconfig.json
